@@ -6,25 +6,49 @@
     <title>Consola Central de Administração e Controlo de Rede Local</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; background-color: #090d16; color: #f1f5f9; }
-        .dashboard-layout { display: grid; grid-template-columns: 320px 1fr; gap: 15px; height: 96vh; }
-        .sidebar { display: flex; flex-direction: column; gap: 15px; max-height: 95vh; overflow-y: auto; }
+        .dashboard-layout { display: grid; grid-template-columns: 340px 1fr; gap: 15px; height: 96vh; }
+        .sidebar { display: flex; flex-direction: column; gap: 15px; max-height: 95vh; overflow-y: auto; padding-right: 5px; }
         .panel { background: #151f32; padding: 15px; border-radius: 8px; border: 1px solid #243552; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
         h3 { margin-top: 0; font-size: 15px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #243552; padding-bottom: 8px; }
         .input-box { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
         label { font-size: 12px; color: #94a3b8; font-weight: 600; }
-        input, select { padding: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; border-radius: 4px; font-weight: bold; }
+        input, select { padding: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; border-radius: 4px; font-weight: bold; width: calc(100% - 18px); }
+        select { width: 100%; }
         button { background-color: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; }
         button:hover { background-color: #1d4ed8; }
+        
+        /* Estilos Wi-Fi Penedos */
+        .network-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #243552; padding-bottom: 6px; margin-bottom: 10px; margin-top: 10px; }
+        .network-title { margin: 0; font-size: 0.95rem; color: #e2e8f0; font-weight: bold; }
+        .pass-badge { background-color: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.75rem; color: #a7f3d0; border: 1px solid #047857; }
+        .device-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; }
+        .device-row:last-child { border: none; }
+        .device-info { font-size: 0.85rem; font-weight: 500; color: #f1f5f9; }
+        .device-ip { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        
+        /* Interruptores Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ef4444; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .status-text { font-size: 0.7rem; font-weight: bold; margin-right: 6px; }
+
+        /* Lista de Alvos */
         .target-list { display: flex; flex-direction: column; gap: 6px; }
         .target-item { background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #243552; display: flex; justify-content: space-between; align-items: center; }
         .target-ip { font-family: monospace; font-size: 13px; color: #38bdf8; }
         .actions-btn { display: flex; gap: 4px; }
         .btn-add { background: #10b981; font-size: 11px; padding: 4px 6px; }
         .btn-add:hover { background: #059669; }
+        
+        /* Workspace e Caixas Dinâmicas */
         .workspace { display: flex; flex-direction: column; gap: 10px; height: 100%; }
         .workspace-bar { background: #151f32; padding: 10px 15px; border-radius: 8px; border: 1px solid #243552; display: flex; justify-content: space-between; align-items: center; }
         .workspace-title { font-weight: bold; color: #f8fafc; font-size: 15px; }
         .grid-workspace { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 12px; overflow-y: auto; height: 85vh; padding-bottom: 20px; }
+        
         .remote-card { background: #1e293b; border: 2px solid #38bdf8; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .remote-card.terminal-mode { border-color: #f59e0b; }
         .remote-card.mirror-mode { border-color: #ec4899; }
@@ -33,6 +57,7 @@
         .btn-close { background: #ef4444; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
         .btn-close:hover { background: #dc2626; }
         iframe { width: 100%; height: 380px; border: none; background: #000; }
+        
         .progress-container { display: none; margin-top: 5px; }
         .bar { width: 100%; background: #334155; height: 6px; border-radius: 3px; overflow: hidden; }
         .fill { width: 0%; height: 100%; background: #10b981; }
@@ -44,10 +69,10 @@
 
 <div class="dashboard-layout">
     
-    <!-- BARRA LATERAL ESQUERDA -->
+    <!-- BARRA LATERAL -->
     <div class="sidebar">
         
-        <!-- Compilação e Exportação EXE Integrada -->
+        <!-- Exportador Nativo -->
         <div class="panel">
             <h3>⚙️ Exportador Nativo</h3>
             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0;">Converta esta consola Web num ficheiro portátil pronto a correr no Windows.</p>
@@ -57,11 +82,57 @@
         <!-- Acesso Mobile / Download -->
         <div class="panel">
             <h3>📱 Acesso Mobile</h3>
-            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0;">Leia o código QR com o telemóvel na mesma rede para abrir a consola móvel:</p>
             <div style="text-align: center;">
                 <div class="mobile-qr" id="qr-space">
-                    <!-- Código QR Gerado Dinamicamente -->
                     <img id="qr-img" src="" alt="QR Link" style="width: 120px; height: 120px;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gestão Wi-Fi Penedos -->
+        <div class="panel">
+            <h3>🔒 Acesso Wi-Fi Penedos</h3>
+            
+            <div class="network-header">
+                <span class="network-title">📶 NET DECO-PENEDOS</span>
+                <span class="pass-badge">98765432</span>
+            </div>
+            <div class="device-row">
+                <div>
+                    <div class="device-info">Consola de Jogos</div>
+                    <div class="device-ip">192.168.1.50</div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span id="txt-deco-consola" class="status-text" style="color: #2ecc71;">ON</span>
+                    <label class="switch"><input type="checkbox" id="switch-deco-consola" checked><span class="slider"></span></label>
+                    <button class="btn-add" style="margin-left: 6px;" onclick="abrirSessaoRemota('192.168.1.50', 'vnc')">🖥️</button>
+                </div>
+            </div>
+            <div class="device-row">
+                <div>
+                    <div class="device-info">Smart TV Quarto</div>
+                    <div class="device-ip">192.168.1.51</div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span id="txt-deco-tv" class="status-text" style="color: #2ecc71;">ON</span>
+                    <label class="switch"><input type="checkbox" id="switch-deco-tv" checked><span class="slider"></span></label>
+                    <button class="btn-add" style="margin-left: 6px;" onclick="abrirSessaoRemota('192.168.1.51', 'vnc')">🖥️</button>
+                </div>
+            </div>
+
+            <div class="network-header">
+                <span class="network-title">📶 NET M-PENEDOS</span>
+                <span class="pass-badge">98765432</span>
+            </div>
+            <div class="device-row">
+                <div>
+                    <div class="device-info">Telemóvel Alvo</div>
+                    <div class="device-ip">192.168.1.80</div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span id="txt-m-tlm" class="status-text" style="color: #2ecc71;">ON</span>
+                    <label class="switch"><input type="checkbox" id="switch-m-tlm" checked><span class="slider"></span></label>
+                    <button class="btn-add" style="margin-left: 6px;" onclick="abrirSessaoRemota('192.168.1.80', 'mirror')">🖥️</button>
                 </div>
             </div>
         </div>
@@ -86,121 +157,5 @@
         
         <!-- Motor de Descoberta Automática -->
         <div class="panel">
-            <h3>🔍 Descoberta na Rede Atual</h3>
+            <h3>🔍 Descoberta na Rede</h3>
             <div class="input-box">
-                <label>Segmento Base:</label>
-                <input type="text" id="subnet-base" value="192.168.1">
-            </div>
-            <button style="width:100%;" id="scan-btn" onclick="executarVarredura()">Mapear Rede Local</button>
-            
-            <div class="progress-container" id="scan-prog">
-                <div class="bar"><div class="fill" id="scan-fill"></div></div>
-                <div class="status-txt" id="scan-info">Iniciando...</div>
-            </div>
-        </div>
-
-        <!-- Resultados Encontrados -->
-        <div class="panel" style="flex: 1;">
-            <h3>🖥️ Dispositivos Identificados</h3>
-            <div class="target-list" id="lista-alvos">
-                <!-- Dispositivos aparecem aqui -->
-            </div>
-        </div>
-        
-    </div>
-    
-    <!-- ESPAÇO DE TRABALHO PRINCIPAL -->
-    <div class="workspace">
-        <div class="workspace-bar">
-            <div class="workspace-title">Monitorização e Controlo Simultâneo (Multi-View)</div>
-            <button style="background: #475569;" onclick="limparGrelha()">Limpar Todos os Ecrãs</button>
-        </div>
-        
-        <div class="grid-workspace" id="workspace-grid">
-            <!-- Os Iframes ativos entram aqui -->
-        </div>
-    </div>
-
-</div>
-
-<script>
-    const PORT_VNC = "6080";
-    const PORT_TERM = "7681";
-    const PORT_MIRROR = "8000";
-
-    // 1. GESTÃO DOS ECRÃS DA GRELHA
-    function abrirSessaoRemota(ip, modo) {
-        const grid = document.getElementById('workspace-grid');
-        const idUnico = `card-${ip.replace(/\./g, '-')}-${modo}`;
-        
-        if (document.getElementById(idUnico)) return;
-
-        let urlAlvo = "";
-        let tituloModo = "";
-        let classeModo = "";
-
-        if (modo === 'vnc') {
-            urlAlvo = `http://${ip}:${PORT_VNC}/vnc.html?autoconnect=true&resize=scale`;
-            tituloModo = `GUI PC: ${ip}`;
-            classeModo = "remote-card";
-        } else if (modo === 'terminal') {
-            urlAlvo = `http://${ip}:${PORT_TERM}`;
-            tituloModo = `CONSOLA: ${ip}`;
-            classeModo = "remote-card terminal-mode";
-        } else if (modo === 'mirror') {
-            urlAlvo = `http://${ip}:${PORT_MIRROR}`;
-            tituloModo = `MOBILE: ${ip}`;
-            classeModo = "remote-card mirror-mode";
-        }
-
-        const card = document.createElement('div');
-        card.className = classeModo;
-        card.id = idUnico;
-        card.innerHTML = `
-            <div class="card-header">
-                <span class="card-title">${tituloModo}</span>
-                <button class="btn-close" onclick="fecharSessao('${idUnico}')">Desconectar</button>
-            </div>
-            <iframe src="${urlAlvo}"></iframe>
-        `;
-        
-        grid.appendChild(card);
-    }
-
-    function fecharSessao(id) {
-        document.getElementById(id)?.remove();
-    }
-
-    function limparGrelha() {
-        document.getElementById('workspace-grid').innerHTML = '';
-    }
-
-    function injetarAlvoManual() {
-        const ip = document.getElementById('manual-ip').value.trim();
-        const modo = document.getElementById('manual-mode').value;
-        if(ip) abrirSessaoRemota(ip, modo);
-    }
-
-    // 2. MOTOR DE EXPLORAÇÃO DE REDE
-    function executarVarredura() {
-        const base = document.getElementById('subnet-base').value.trim();
-        const btn = document.getElementById('scan-btn');
-        const pContainer = document.getElementById('scan-prog');
-        const pFill = document.getElementById('scan-fill');
-        const pInfo = document.getElementById('scan-info');
-        const lista = document.getElementById('lista-alvos');
-        
-        lista.innerHTML = '';
-        btn.disabled = true;
-        pContainer.style.display = 'block';
-        
-        let ipAtual = 1;
-        const limite = 254;
-        let achados = 0;
-
-        function checkNext() {
-            if (ipAtual > limite) {
-                pInfo.innerText = `Fim. Encontrados ${achados} ativos.`;
-                btn.disabled = false;
-                return;
-            }
