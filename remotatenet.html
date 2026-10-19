@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Central de Gestão e Controlo de Rede (192.X)</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background-color: #0f172a; color: #f8fafc; }
+        .grid-container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; max-width: 1600px; margin: auto; }
+        
+        /* Blocos Comuns */
+        .panel { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2, h3 { margin-top: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        
+        /* Bloco de Configuração e Scanner (Esquerda) */
+        .left-col { display: flex; flex-direction: column; gap: 20px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        label { font-weight: bold; color: #94a3b8; font-size: 14px; }
+        input[type="text"] { padding: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; border-radius: 6px; font-size: 15px; font-weight: bold; }
+        
+        button { background-color: #2563eb; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #1d4ed8; }
+        button:disabled { background-color: #475569; cursor: not-allowed; }
+        
+        /* Barra de Progresso do Scanner */
+        .progress-bar { width: 100%; background-color: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; display: none; }
+        .progress-fill { width: 0%; height: 100%; background-color: #10b981; transition: width 0.1s; }
+        #scan-status { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+        
+        /* Lista de Dispositivos */
+        .device-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .device-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; }
+        .device-ip { font-weight: bold; color: #f8fafc; font-size: 14px; }
+        .btn-select { background-color: #10b981; font-size: 12px; padding: 4px 8px; }
+        .btn-select:hover { background-color: #059669; }
+
+        /* Painel de Controlo Remoto (Direita) */
+        .tabs { display: flex; gap: 5px; margin-bottom: -1px; }
+        .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 12px 20px; font-weight: bold; border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.2s; }
+        .tab-btn:hover { background: #334155; color: #fff; }
+        
+        /* Cores Ativas por Modo */
+        .tab-btn.active#btn-vnc { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+        .tab-btn.active#btn-term { background: #f59e0b; color: #0f172a; border-color: #f59e0b; }
+        .tab-btn.active#btn-mirror { background: #ec4899; color: #fff; border-color: #ec4899; }
+
+        .viewer-container { background: #1e293b; border: 2px solid #334155; border-radius: 0 12px 12px 12px; padding: 15px; }
+        .viewer-container.active-vnc { border-color: #38bdf8; }
+        .viewer-container.active-term { border-color: #f59e0b; }
+        .viewer-container.active-mirror { border-color: #ec4899; }
+        
+        iframe { width: 100%; height: 700px; border: none; background: #000; border-radius: 6px; }
+        .info-text { margin-bottom: 12px; color: #cbd5e1; font-size: 14px; background: #0f172a; padding: 10px; border-radius: 6px; border-left: 4px solid #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="grid-container">
+    
+    <!-- COLUNA ESQUERDA: Scanner e Configuração -->
+    <div class="left-col">
+        
+        <!-- Alvo Atual -->
+        <div class="panel">
+            <h3>🎯 Dispositivo Alvo</h3>
+            <div class="controls">
+                <label for="device-ip">IP em Controlo:</label>
+                <input type="text" id="device-ip" value="192.168.1.50" placeholder="Ex: 192.168.1.50">
+                <button onclick="atualizarViewer()">Conectar / Atualizar</button>
+            </div>
+        </div>
+        
+        <!-- Varredura da Rede (Scanner) -->
+        <div class="panel">
+            <h3>🔍 Scanner LAN 192.X</h3>
+            <div class="controls">
+                <label for="subnet">Sub-rede Base:</label>
+                <input type="text" id="subnet" value="192.168.1" placeholder="Ex: 192.168.1">
+                <button id="btnScan" onclick="iniciarScanSubrede()">Procurar Ativos</button>
+            </div>
+            
+            <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+            <div id="scan-status">Pronto para detetar.</div>
+            
+            <div class="device-list" id="listaDispositivos">
+                <!-- Encontrados via Ping/Image aparecem aqui -->
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- COLUNA DIREITA: Controlo Remoto Multi-Abas -->
+    <div class="right-col">
+        
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-vnc" onclick="mudarModo('vnc')">🖼️ Ecrã PC (NoVNC)</button>
+            <button class="tab-btn" id="btn-term" onclick="mudarModo('terminal')">📟 Consola (ttyd)</button>
+            <button class="tab-btn" id="btn-mirror" onclick="mudarModo('mirror')">📱 Telemóvel (Scrcpy Web)</button>
+        </div>
+        
+        <div class="viewer-container active-vnc" id="main-container">
+            <div id="status-message" class="info-text">A iniciar...</div>
+            <iframe id="remote-viewer" src=""></iframe>
+        </div>
+        
+    </div>
+
+</div>
+
+<script>
+    // CONFIGURAÇÃO DE PORTOS DA REDE LOCAL
+    const PORTO_VNC = "6080";      // NoVNC HTTP Proxy
+    const PORTO_TERMINAL = "7681"; // ttyd Terminal
+    const PORTO_MIRROR = "8000";   // Servidor Scrcpy Web (Estilo ApowerMirror)
+
+    let modoAtual = 'vnc';
+
+    // 1. ATUALIZAÇÃO DO VISUALIZADOR PRINCIPAL
+    function atualizarViewer() {
+        const ip = document.getElementById('device-ip').value.trim();
+        const iframe = document.getElementById('remote-viewer');
+        const statusMsg = document.getElementById('status-message');
+        const container = document.getElementById('main-container');
+
+        container.className = "viewer-container";
+
+        if (modoAtual === 'vnc') {
+            iframe.src = `http://${ip}:${PORTO_VNC}/vnc.html?autoconnect=true&resize=scale`;
+            statusMsg.innerHTML = `🌐 <strong>Modo Ecrã PC:</strong> Ligado a <strong>${ip}:${PORTO_VNC}</strong> via NoVNC.`;
+            container.classList.add("active-vnc");
+        } else if (modoAtual === 'terminal') {
+            iframe.src = `http://${ip}:${PORTO_TERMINAL}`;
+            statusMsg.innerHTML = `📟 <strong>Modo Consola:</strong> SSH/Terminal Web aberto em <strong>${ip}:${PORTO_TERMINAL}</strong>.`;
+            container.classList.add("active-term");
+        } else if (modoAtual === 'mirror') {
+            iframe.src = `http://${ip}:${PORTO_MIRROR}`;
+            statusMsg.innerHTML = `📱 <strong>Modo Mobile Mirror:</strong> Fluxo Scrcpy (Estilo ApowerMirror) em <strong>${ip}:${PORTO_MIRROR}</strong>.`;
+            container.classList.add("active-mirror");
+        }
+    }
+
+    function mudarModo(modo) {
+        modoAtual = modo;
+        document.getElementById('btn-vnc').classList.toggle('active', modo === 'vnc');
+        document.getElementById('btn-term').classList.toggle('active', modo === 'terminal');
+        document.getElementById('btn-mirror').classList.toggle('active', modo === 'mirror');
+        atualizarViewer();
+    }
+
+    function selecionarDispositivo(ip) {
+        document.getElementById('device-ip').value = ip;
+        atualizarViewer();
+    }
+
+    // 2. MOTOR DE SCANNER DA REDE LOCAL (Técnica Fetch-Image)
+    function iniciarScanSubrede() {
+        const baseSubnet = document.getElementById('subnet').value.trim();
+        const btn = document.getElementById('btnScan');
+        const status = document.getElementById('scan-status');
+        const pBar = document.getElementById('progressBar');
+        const pFill = document.getElementById('progressFill');
+        const lista = document.getElementById('listaDispositivos');
+        
+        lista.innerHTML = '';
+        btn.disabled = true;
+        pBar.style.display = 'block';
+        
+        let atual = 1;
+        const maximo = 254;
+        let encontrados = 0;
+
+        function scanProximoIP() {
+            if (atual > maximo) {
+                status.innerText = `Varredura concluída! Encontrado(s) ${encontrados} dispositivo(s).`;
+                btn.disabled = false;
+                setTimeout(() => pBar.style.display = 'none', 3000);
+                return;
+            }
+
+            const ipTestar = `${baseSubnet}.${atual}`;
+            status.innerText = `A verificar: ${ipTestar}...`;
+            pFill.style.width = `${(atual / maximo) * 100}%`;
+
+            let respondido = false;
+            const img = new Image();
+            
+            img.onload = img.onerror = function() {
+                if (!respondido) {
+                    respondido = true;
+                    adicionarDispositivoResultados(ipTestar);
+                    encontrados++;
+                }
+            };
+
+            // Dispara contra o porto 80 de cada IP da gama para ver se o hardware responde
+            img.src = `http://${ipTestar}/favicon.ico?t=${Date.now()}`;
+
+            setTimeout(() => {
+                if (!respondido) {
+                    respondido = true;
+                    img.src = ""; // Aborta
+                    atual++;
+                    scanProximoIP();
+                } else {
+                    atual++;
