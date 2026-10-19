@@ -3,203 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Central de Gestão e Controlo de Rede (192.X)</title>
+    <title>Consola Central de Administração e Controlo de Rede Local</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background-color: #0f172a; color: #f8fafc; }
-        .grid-container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; max-width: 1600px; margin: auto; }
-        
-        /* Blocos Comuns */
-        .panel { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h2, h3 { margin-top: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-        
-        /* Bloco de Configuração e Scanner (Esquerda) */
-        .left-col { display: flex; flex-direction: column; gap: 20px; }
-        .controls { display: flex; flex-direction: column; gap: 10px; }
-        label { font-weight: bold; color: #94a3b8; font-size: 14px; }
-        input[type="text"] { padding: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; border-radius: 6px; font-size: 15px; font-weight: bold; }
-        
-        button { background-color: #2563eb; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.2s; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; background-color: #090d16; color: #f1f5f9; }
+        .dashboard-layout { display: grid; grid-template-columns: 320px 1fr; gap: 15px; height: 96vh; }
+        .sidebar { display: flex; flex-direction: column; gap: 15px; max-height: 95vh; overflow-y: auto; }
+        .panel { background: #151f32; padding: 15px; border-radius: 8px; border: 1px solid #243552; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        h3 { margin-top: 0; font-size: 15px; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #243552; padding-bottom: 8px; }
+        .input-box { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        label { font-size: 12px; color: #94a3b8; font-weight: 600; }
+        input, select { padding: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; border-radius: 4px; font-weight: bold; }
+        button { background-color: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; }
         button:hover { background-color: #1d4ed8; }
-        button:disabled { background-color: #475569; cursor: not-allowed; }
-        
-        /* Barra de Progresso do Scanner */
-        .progress-bar { width: 100%; background-color: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; display: none; }
-        .progress-fill { width: 0%; height: 100%; background-color: #10b981; transition: width 0.1s; }
-        #scan-status { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
-        
-        /* Lista de Dispositivos */
-        .device-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .device-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; }
-        .device-ip { font-weight: bold; color: #f8fafc; font-size: 14px; }
-        .btn-select { background-color: #10b981; font-size: 12px; padding: 4px 8px; }
-        .btn-select:hover { background-color: #059669; }
-
-        /* Painel de Controlo Remoto (Direita) */
-        .tabs { display: flex; gap: 5px; margin-bottom: -1px; }
-        .tab-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 12px 20px; font-weight: bold; border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.2s; }
-        .tab-btn:hover { background: #334155; color: #fff; }
-        
-        /* Cores Ativas por Modo */
-        .tab-btn.active#btn-vnc { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
-        .tab-btn.active#btn-term { background: #f59e0b; color: #0f172a; border-color: #f59e0b; }
-        .tab-btn.active#btn-mirror { background: #ec4899; color: #fff; border-color: #ec4899; }
-
-        .viewer-container { background: #1e293b; border: 2px solid #334155; border-radius: 0 12px 12px 12px; padding: 15px; }
-        .viewer-container.active-vnc { border-color: #38bdf8; }
-        .viewer-container.active-term { border-color: #f59e0b; }
-        .viewer-container.active-mirror { border-color: #ec4899; }
-        
-        iframe { width: 100%; height: 700px; border: none; background: #000; border-radius: 6px; }
-        .info-text { margin-bottom: 12px; color: #cbd5e1; font-size: 14px; background: #0f172a; padding: 10px; border-radius: 6px; border-left: 4px solid #64748b; }
+        .target-list { display: flex; flex-direction: column; gap: 6px; }
+        .target-item { background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #243552; display: flex; justify-content: space-between; align-items: center; }
+        .target-ip { font-family: monospace; font-size: 13px; color: #38bdf8; }
+        .actions-btn { display: flex; gap: 4px; }
+        .btn-add { background: #10b981; font-size: 11px; padding: 4px 6px; }
+        .btn-add:hover { background: #059669; }
+        .workspace { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+        .workspace-bar { background: #151f32; padding: 10px 15px; border-radius: 8px; border: 1px solid #243552; display: flex; justify-content: space-between; align-items: center; }
+        .workspace-title { font-weight: bold; color: #f8fafc; font-size: 15px; }
+        .grid-workspace { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 12px; overflow-y: auto; height: 85vh; padding-bottom: 20px; }
+        .remote-card { background: #1e293b; border: 2px solid #38bdf8; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .remote-card.terminal-mode { border-color: #f59e0b; }
+        .remote-card.mirror-mode { border-color: #ec4899; }
+        .card-header { background: #0f172a; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #243552; }
+        .card-title { font-size: 12px; font-weight: bold; font-family: monospace; }
+        .btn-close { background: #ef4444; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+        .btn-close:hover { background: #dc2626; }
+        iframe { width: 100%; height: 380px; border: none; background: #000; }
+        .progress-container { display: none; margin-top: 5px; }
+        .bar { width: 100%; background: #334155; height: 6px; border-radius: 3px; overflow: hidden; }
+        .fill { width: 0%; height: 100%; background: #10b981; }
+        .status-txt { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .mobile-qr { text-align: center; margin-top: 10px; background: white; padding: 10px; border-radius: 6px; display: inline-block; }
     </style>
 </head>
 <body>
 
-<div class="grid-container">
+<div class="dashboard-layout">
     
-    <!-- COLUNA ESQUERDA: Scanner e Configuração -->
-    <div class="left-col">
+    <!-- BARRA LATERAL ESQUERDA -->
+    <div class="sidebar">
         
-        <!-- Alvo Atual -->
+        <!-- Compilação e Exportação EXE Integrada -->
         <div class="panel">
-            <h3>🎯 Dispositivo Alvo</h3>
-            <div class="controls">
-                <label for="device-ip">IP em Controlo:</label>
-                <input type="text" id="device-ip" value="192.168.1.50" placeholder="Ex: 192.168.1.50">
-                <button onclick="atualizarViewer()">Conectar / Atualizar</button>
+            <h3>⚙️ Exportador Nativo</h3>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0;">Converta esta consola Web num ficheiro portátil pronto a correr no Windows.</p>
+            <button style="width:100%; background-color: #8b5cf6;" onclick="exportarParaCompilador()">Exportar como Aplicação (.EXE)</button>
+        </div>
+
+        <!-- Acesso Mobile / Download -->
+        <div class="panel">
+            <h3>📱 Acesso Mobile</h3>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0;">Leia o código QR com o telemóvel na mesma rede para abrir a consola móvel:</p>
+            <div style="text-align: center;">
+                <div class="mobile-qr" id="qr-space">
+                    <!-- Código QR Gerado Dinamicamente -->
+                    <img id="qr-img" src="" alt="QR Link" style="width: 120px; height: 120px;">
+                </div>
             </div>
         </div>
         
-        <!-- Varredura da Rede (Scanner) -->
+        <!-- Adicionar Alvo Manualmente -->
         <div class="panel">
-            <h3>🔍 Scanner LAN 192.X</h3>
-            <div class="controls">
-                <label for="subnet">Sub-rede Base:</label>
-                <input type="text" id="subnet" value="192.168.1" placeholder="Ex: 192.168.1">
-                <button id="btnScan" onclick="iniciarScanSubrede()">Procurar Ativos</button>
+            <h3>📌 Injetar IP Manual</h3>
+            <div class="input-box">
+                <label>Endereço IPv4:</label>
+                <input type="text" id="manual-ip" value="192.168.1.50">
             </div>
+            <div class="input-box">
+                <label>Protocolo de Controlo:</label>
+                <select id="manual-mode">
+                    <option value="vnc">Interface Gráfica (NoVNC)</option>
+                    <option value="terminal">Consola Terminal (ttyd)</option>
+                    <option value="mirror">Telemóvel (Scrcpy Web)</option>
+                </select>
+            </div>
+            <button style="width:100%;" onclick="injetarAlvoManual()">Lançar na Grelha</button>
+        </div>
+        
+        <!-- Motor de Descoberta Automática -->
+        <div class="panel">
+            <h3>🔍 Descoberta na Rede Atual</h3>
+            <div class="input-box">
+                <label>Segmento Base:</label>
+                <input type="text" id="subnet-base" value="192.168.1">
+            </div>
+            <button style="width:100%;" id="scan-btn" onclick="executarVarredura()">Mapear Rede Local</button>
             
-            <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
-            <div id="scan-status">Pronto para detetar.</div>
-            
-            <div class="device-list" id="listaDispositivos">
-                <!-- Encontrados via Ping/Image aparecem aqui -->
+            <div class="progress-container" id="scan-prog">
+                <div class="bar"><div class="fill" id="scan-fill"></div></div>
+                <div class="status-txt" id="scan-info">Iniciando...</div>
+            </div>
+        </div>
+
+        <!-- Resultados Encontrados -->
+        <div class="panel" style="flex: 1;">
+            <h3>🖥️ Dispositivos Identificados</h3>
+            <div class="target-list" id="lista-alvos">
+                <!-- Dispositivos aparecem aqui -->
             </div>
         </div>
         
     </div>
     
-    <!-- COLUNA DIREITA: Controlo Remoto Multi-Abas -->
-    <div class="right-col">
-        
-        <div class="tabs">
-            <button class="tab-btn active" id="btn-vnc" onclick="mudarModo('vnc')">🖼️ Ecrã PC (NoVNC)</button>
-            <button class="tab-btn" id="btn-term" onclick="mudarModo('terminal')">📟 Consola (ttyd)</button>
-            <button class="tab-btn" id="btn-mirror" onclick="mudarModo('mirror')">📱 Telemóvel (Scrcpy Web)</button>
+    <!-- ESPAÇO DE TRABALHO PRINCIPAL -->
+    <div class="workspace">
+        <div class="workspace-bar">
+            <div class="workspace-title">Monitorização e Controlo Simultâneo (Multi-View)</div>
+            <button style="background: #475569;" onclick="limparGrelha()">Limpar Todos os Ecrãs</button>
         </div>
         
-        <div class="viewer-container active-vnc" id="main-container">
-            <div id="status-message" class="info-text">A iniciar...</div>
-            <iframe id="remote-viewer" src=""></iframe>
+        <div class="grid-workspace" id="workspace-grid">
+            <!-- Os Iframes ativos entram aqui -->
         </div>
-        
     </div>
 
 </div>
 
 <script>
-    // CONFIGURAÇÃO DE PORTOS DA REDE LOCAL
-    const PORTO_VNC = "6080";      // NoVNC HTTP Proxy
-    const PORTO_TERMINAL = "7681"; // ttyd Terminal
-    const PORTO_MIRROR = "8000";   // Servidor Scrcpy Web (Estilo ApowerMirror)
+    const PORT_VNC = "6080";
+    const PORT_TERM = "7681";
+    const PORT_MIRROR = "8000";
 
-    let modoAtual = 'vnc';
+    // 1. GESTÃO DOS ECRÃS DA GRELHA
+    function abrirSessaoRemota(ip, modo) {
+        const grid = document.getElementById('workspace-grid');
+        const idUnico = `card-${ip.replace(/\./g, '-')}-${modo}`;
+        
+        if (document.getElementById(idUnico)) return;
 
-    // 1. ATUALIZAÇÃO DO VISUALIZADOR PRINCIPAL
-    function atualizarViewer() {
-        const ip = document.getElementById('device-ip').value.trim();
-        const iframe = document.getElementById('remote-viewer');
-        const statusMsg = document.getElementById('status-message');
-        const container = document.getElementById('main-container');
+        let urlAlvo = "";
+        let tituloModo = "";
+        let classeModo = "";
 
-        container.className = "viewer-container";
-
-        if (modoAtual === 'vnc') {
-            iframe.src = `http://${ip}:${PORTO_VNC}/vnc.html?autoconnect=true&resize=scale`;
-            statusMsg.innerHTML = `🌐 <strong>Modo Ecrã PC:</strong> Ligado a <strong>${ip}:${PORTO_VNC}</strong> via NoVNC.`;
-            container.classList.add("active-vnc");
-        } else if (modoAtual === 'terminal') {
-            iframe.src = `http://${ip}:${PORTO_TERMINAL}`;
-            statusMsg.innerHTML = `📟 <strong>Modo Consola:</strong> SSH/Terminal Web aberto em <strong>${ip}:${PORTO_TERMINAL}</strong>.`;
-            container.classList.add("active-term");
-        } else if (modoAtual === 'mirror') {
-            iframe.src = `http://${ip}:${PORTO_MIRROR}`;
-            statusMsg.innerHTML = `📱 <strong>Modo Mobile Mirror:</strong> Fluxo Scrcpy (Estilo ApowerMirror) em <strong>${ip}:${PORTO_MIRROR}</strong>.`;
-            container.classList.add("active-mirror");
+        if (modo === 'vnc') {
+            urlAlvo = `http://${ip}:${PORT_VNC}/vnc.html?autoconnect=true&resize=scale`;
+            tituloModo = `GUI PC: ${ip}`;
+            classeModo = "remote-card";
+        } else if (modo === 'terminal') {
+            urlAlvo = `http://${ip}:${PORT_TERM}`;
+            tituloModo = `CONSOLA: ${ip}`;
+            classeModo = "remote-card terminal-mode";
+        } else if (modo === 'mirror') {
+            urlAlvo = `http://${ip}:${PORT_MIRROR}`;
+            tituloModo = `MOBILE: ${ip}`;
+            classeModo = "remote-card mirror-mode";
         }
+
+        const card = document.createElement('div');
+        card.className = classeModo;
+        card.id = idUnico;
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="card-title">${tituloModo}</span>
+                <button class="btn-close" onclick="fecharSessao('${idUnico}')">Desconectar</button>
+            </div>
+            <iframe src="${urlAlvo}"></iframe>
+        `;
+        
+        grid.appendChild(card);
     }
 
-    function mudarModo(modo) {
-        modoAtual = modo;
-        document.getElementById('btn-vnc').classList.toggle('active', modo === 'vnc');
-        document.getElementById('btn-term').classList.toggle('active', modo === 'terminal');
-        document.getElementById('btn-mirror').classList.toggle('active', modo === 'mirror');
-        atualizarViewer();
+    function fecharSessao(id) {
+        document.getElementById(id)?.remove();
     }
 
-    function selecionarDispositivo(ip) {
-        document.getElementById('device-ip').value = ip;
-        atualizarViewer();
+    function limparGrelha() {
+        document.getElementById('workspace-grid').innerHTML = '';
     }
 
-    // 2. MOTOR DE SCANNER DA REDE LOCAL (Técnica Fetch-Image)
-    function iniciarScanSubrede() {
-        const baseSubnet = document.getElementById('subnet').value.trim();
-        const btn = document.getElementById('btnScan');
-        const status = document.getElementById('scan-status');
-        const pBar = document.getElementById('progressBar');
-        const pFill = document.getElementById('progressFill');
-        const lista = document.getElementById('listaDispositivos');
+    function injetarAlvoManual() {
+        const ip = document.getElementById('manual-ip').value.trim();
+        const modo = document.getElementById('manual-mode').value;
+        if(ip) abrirSessaoRemota(ip, modo);
+    }
+
+    // 2. MOTOR DE EXPLORAÇÃO DE REDE
+    function executarVarredura() {
+        const base = document.getElementById('subnet-base').value.trim();
+        const btn = document.getElementById('scan-btn');
+        const pContainer = document.getElementById('scan-prog');
+        const pFill = document.getElementById('scan-fill');
+        const pInfo = document.getElementById('scan-info');
+        const lista = document.getElementById('lista-alvos');
         
         lista.innerHTML = '';
         btn.disabled = true;
-        pBar.style.display = 'block';
+        pContainer.style.display = 'block';
         
-        let atual = 1;
-        const maximo = 254;
-        let encontrados = 0;
+        let ipAtual = 1;
+        const limite = 254;
+        let achados = 0;
 
-        function scanProximoIP() {
-            if (atual > maximo) {
-                status.innerText = `Varredura concluída! Encontrado(s) ${encontrados} dispositivo(s).`;
+        function checkNext() {
+            if (ipAtual > limite) {
+                pInfo.innerText = `Fim. Encontrados ${achados} ativos.`;
                 btn.disabled = false;
-                setTimeout(() => pBar.style.display = 'none', 3000);
                 return;
             }
-
-            const ipTestar = `${baseSubnet}.${atual}`;
-            status.innerText = `A verificar: ${ipTestar}...`;
-            pFill.style.width = `${(atual / maximo) * 100}%`;
-
-            let respondido = false;
-            const img = new Image();
-            
-            img.onload = img.onerror = function() {
-                if (!respondido) {
-                    respondido = true;
-                    adicionarDispositivoResultados(ipTestar);
-                    encontrados++;
-                }
-            };
-
-            // Dispara contra o porto 80 de cada IP da gama para ver se o hardware responde
-            img.src = `http://${ipTestar}/favicon.ico?t=${Date.now()}`;
-
-            setTimeout(() => {
-                if (!respondido) {
-                    respondido = true;
-                    img.src = ""; // Aborta
-                    atual++;
-                    scanProximoIP();
-                } else {
-                    atual++;
